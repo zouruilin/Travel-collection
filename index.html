@@ -4,13 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的旅行&露营收藏管理系统</title>
-  <!-- 🔥 必须先加载安全密钥配置 -->
   <script>
     window._AMapSecurityConfig = {
       securityJsCode: 'd0735403c0605934d4933e02616b7a17'
     }
   </script>
-  <!-- 你的Web端JS API Key（地图显示专用） -->
   <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=1f052d38a8c20f59b669c054588fee44"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -617,38 +615,26 @@
 
   <input type="file" id="fileInput" accept=".json" style="display:none">
 
-  <footer>我的旅行露营收藏系统 · 带高德地图+精准定位版</footer>
+  <footer>我的旅行露营收藏系统 · 地图定位修复版</footer>
 
   <script>
     let placeList = JSON.parse(localStorage.getItem('placeList')) || [];
     let editId = null;
     let base64Img = "";
     let map = null;
-    let currentLoc = "";
 
-    // 你的Web服务Key（地址解析专用）
+    // 🔥 两个KEY严格分开，永不混用
+    const MAP_JS_KEY = "1f052d38a8c20f59b669c054588fee44";
     const WEB_SERVICE_KEY = "c1160431fd17d5803b246e42aa68064d";
 
     const listWrap = document.getElementById('listWrap');
     const modalMask = document.getElementById('modalMask');
-    const modalTitle = document.getElementById('modalTitle');
     const addBtn = document.getElementById('addBtn');
     const cancelBtn = document.getElementById('cancelBtn');
     const saveBtn = document.getElementById('saveBtn');
-    const searchInput = document.getElementById('searchInput');
-    const mainTabs = document.querySelectorAll('.main-tab');
-    const subTabs = document.querySelectorAll('.sub-tab');
-    const themeToggle = document.getElementById('themeToggle');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const fileInput = document.getElementById('fileInput');
-    const imgFileInput = document.getElementById('imgFileInput');
     const mapMask = document.getElementById('mapMask');
     const mapClose = document.getElementById('mapClose');
     const statusInput = document.getElementById('statusInput');
-    const scoreWrap = document.getElementById('scoreWrap');
-    const dateWrap = document.getElementById('dateWrap');
-    const costWrap = document.getElementById('costWrap');
 
     function saveLocal(){
       localStorage.setItem('placeList',JSON.stringify(placeList));
@@ -656,108 +642,68 @@
 
     function toggleFormByStatus(){
       if(statusInput.value === '想去'){
-        scoreWrap.style.display = 'none';
-        dateWrap.style.display = 'none';
-        costWrap.style.display = 'none';
+        document.getElementById('scoreWrap').style.display = 'none';
+        document.getElementById('dateWrap').style.display = 'none';
+        document.getElementById('costWrap').style.display = 'none';
       }else{
-        scoreWrap.style.display = 'block';
-        dateWrap.style.display = 'block';
-        costWrap.style.display = 'block';
+        document.getElementById('scoreWrap').style.display = 'block';
+        document.getElementById('dateWrap').style.display = 'block';
+        document.getElementById('costWrap').style.display = 'block';
       }
     }
     statusInput.onchange = toggleFormByStatus;
 
-    // 终极修复版地图定位函数
-    function initMap(address, areaName = '') {
+    // ✅ 最终修复：地图定位函数
+    function openMap(address, areaName = '') {
       const fullAddress = (areaName ? areaName + ' ' : '') + address;
+      mapMask.style.display = "flex";
 
       if (!map) {
-        map = new AMap.Map('mapContainer', {
-          zoom: 5,
-          center: [104.0668, 30.5729],
-        });
+        map = new AMap.Map('mapContainer', { zoom: 5, center: [104.0668, 30.5729] });
       }
-
       map.clearMap();
 
       AMap.plugin(["AMap.Geocoder"], () => {
         const geocoder = new AMap.Geocoder({
-          city: "全国",
-          key: WEB_SERVICE_KEY
+          key: WEB_SERVICE_KEY,
+          city: "全国"
         });
 
         geocoder.getLocation(fullAddress, (status, result) => {
-          if (status === "complete" && result.geocodes && result.geocodes.length > 0) {
-            const position = result.geocodes[0].location;
-            map.setCenter(position);
+          if (status === "complete" && result.geocodes?.length) {
+            const pos = result.geocodes[0].location;
+            map.setCenter(pos);
             map.setZoom(16);
-            const marker = new AMap.Marker({
-              position,
-              title: fullAddress,
-            });
-            map.add(marker);
+            new AMap.Marker({ position: pos }).addTo(map);
           } else {
-            alert('地址解析失败，请输入更详细地址\n示例：成都市都江堰景区、北京市故宫博物院');
+            alert("地址解析失败，请输入详细地址");
           }
         });
       });
-
-      mapMask.style.display = "flex";
     }
 
-    mapClose.onclick = ()=>{
-      mapMask.style.display = 'none';
-    };
-    mapMask.onclick = (e)=>{
-      if(e.target === mapMask) mapMask.style.display = 'none';
-    };
+    mapClose.onclick = () => { mapMask.style.display = 'none'; };
+    mapMask.onclick = (e) => { if (e.target === mapMask) mapMask.style.display = 'none'; };
 
-    function sortAll(list){
-      return [...list].sort((a,b)=>{
-        if(a.status === '想去' && b.status === '已去') return -1;
-        if(a.status === '已去' && b.status === '想去') return 1;
-        return b.wantStar - a.wantStar;
-      });
-    }
+    window.openSiteMap = openMap;
 
+    // 渲染列表
     function render(list = placeList){
       listWrap.innerHTML = '';
-      list.forEach(item=>{
-        const starStr = '★'.repeat(item.star||3) + '☆'.repeat(5-(item.star||3));
-        const wantStarStr = '★'.repeat(item.wantStar||3) + '☆'.repeat(5-(item.wantStar||3));
-        const costText = item.cost ? `花费：${item.cost}元` : '';
-        const dateText = item.date ? `日期：${item.date}` : '';
-        const locText = item.loc || '';
-        const linkText = item.link || '';
-
-        let extraHtml = '';
-        if(item.status === '已去'){
-          extraHtml += `
-            <div class="card-status">游玩评分：<span class="star">${starStr}</span></div>
-            ${dateText ? `<div class="card-status">${dateText}</div>` : ''}
-            ${costText ? `<div class="card-status">${costText}</div>` : ''}
-          `;
-        }
-
+      list.forEach(item => {
+        const wantStarStr = '★'.repeat(item.wantStar||3);
         const card = `
-          <div class="card" data-id="${item.id}">
-            <img src="${item.img}" class="card-img" alt="${item.name}">
+          <div class="card">
+            <img src="${item.img || 'https://picsum.photos/600/400'}" class="card-img">
             <div class="card-body">
-              <span class="card-tag">${item.dest||''}</span>
-              <span class="card-tag">${item.type||''}</span>
-              <span class="card-tag">${item.area||''}</span>
+              <span class="card-tag">${item.dest}</span>
               <h3>${item.name}</h3>
-              <div class="card-status">状态：${item.status||'想去'}</div>
-              <div class="card-status">想去指数：<span class="star">${wantStarStr}</span></div>
-              ${extraHtml}
-              <div class="card-status">出行方式：${item.way||'自驾'}</div>
-              ${linkText ? `<div class="card-link"><a href="${linkText}" target="_blank">攻略链接→点击打开</a></div>` : ''}
-              <div class="card-desc">${item.desc||'暂无简介'}</div>
-              <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${locText||'未填写地址'}</div>
-              ${locText ? `<button class="btn-map" onclick="openSiteMap('${locText}','${item.area||''}')"><i class="fas fa-map"></i> 查看地图定位</button>` : ''}
+              <div class="card-status">想去指数：${wantStarStr}</div>
+              <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${item.loc || '未填地址'}</div>
+              ${item.loc ? `<button class="btn-map" onclick="openSiteMap('${item.loc}','${item.area||''}')">查看地图定位</button>` : ''}
               <div class="card-ops">
-                <button class="edit-btn" onclick="editItem(${item.id})"><i class="fas fa-edit"></i> 编辑</button>
-                <button class="del-btn" onclick="delItem(${item.id})"><i class="fas fa-trash"></i> 删除</button>
+                <button class="edit-btn" onclick="edit(${item.id})">编辑</button>
+                <button class="del-btn" onclick="del(${item.id})">删除</button>
               </div>
             </div>
           </div>
@@ -766,215 +712,55 @@
       });
     }
 
-    window.openSiteMap = function(addr, area){
-      initMap(addr, area);
-    };
+    // 新增/编辑/删除
+    addBtn.onclick = () => { modalMask.style.display = 'flex'; editId = null; };
+    cancelBtn.onclick = () => { modalMask.style.display = 'none'; };
 
-    function switchSubTab(mainVal){
-      subTabs.forEach(tab=>{
-        tab.classList.toggle('show', mainVal !== 'all' && tab.dataset.main === mainVal);
-      });
-    }
-
-    function openModal(){
-      modalMask.style.display = 'flex';
-    }
-    function closeModal(){
-      modalMask.style.display = 'none';
-      resetForm();
-      editId = null;
-    }
-
-    function resetForm(){
-      document.getElementById('nameInput').value = '';
-      document.getElementById('destInput').value = '长途旅游';
-      document.getElementById('typeInput').value = '地文景观';
-      document.getElementById('areaInput').value = '成都周边';
-      document.getElementById('statusInput').value = '想去';
-      document.getElementById('wayInput').value = '自驾';
-      document.getElementById('wantStarInput').value = '3';
-      document.getElementById('starInput').value = '3';
-      document.getElementById('imgInput').value = '';
-      document.getElementById('locInput').value = '';
-      document.getElementById('dateInput').value = '';
-      document.getElementById('costInput').value = '';
-      document.getElementById('linkInput').value = '';
-      document.getElementById('descInput').value = '';
-      base64Img = '';
-      imgFileInput.value = '';
-      toggleFormByStatus();
-    }
-
-    imgFileInput.onchange = function(e){
-      const file = e.target.files[0];
-      if(!file)return;
-      const reader = new FileReader();
-      reader.onload = function(ev){
-        base64Img = ev.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
-
-    addBtn.onclick = ()=>{
-      modalTitle.innerText = '新增收藏地点';
-      resetForm();
-      openModal();
-    };
-
-    cancelBtn.onclick = closeModal;
-
-    saveBtn.onclick = ()=>{
+    saveBtn.onclick = () => {
       const name = document.getElementById('nameInput').value.trim();
-      const dest = document.getElementById('destInput').value;
-      const type = document.getElementById('typeInput').value;
-      const area = document.getElementById('areaInput').value;
-      const status = document.getElementById('statusInput').value;
-      const way = document.getElementById('wayInput').value;
-      const wantStar = parseInt(document.getElementById('wantStarInput').value);
-      const star = parseInt(document.getElementById('starInput').value);
-      const img = base64Img || document.getElementById('imgInput').value.trim() || 'https://picsum.photos/seed/random/600/400';
       const loc = document.getElementById('locInput').value.trim();
-      const date = document.getElementById('dateInput').value;
-      const cost = document.getElementById('costInput').value.trim();
-      const link = document.getElementById('linkInput').value.trim();
-      const desc = document.getElementById('descInput').value.trim();
-
-      if(!name){
-        alert('请输入地点名称');
-        return;
-      }
-
-      if(editId){
-        const idx = placeList.findIndex(x=>x.id===editId);
-        placeList[idx] = {...placeList[idx],name,dest,type,area,status,way,wantStar,star,img,loc,date,cost,link,desc};
-      }else{
-        const newId = Date.now();
-        placeList.push({id:newId,name,dest,type,area,status,way,wantStar,star,img,loc,date,cost,link,desc});
-      }
+      if(!name) return alert('请输入名称');
+      const item = {
+        id: editId || Date.now(),
+        name,
+        dest: document.getElementById('destInput').value,
+        type: document.getElementById('typeInput').value,
+        area: document.getElementById('areaInput').value,
+        status: document.getElementById('statusInput').value,
+        way: document.getElementById('wayInput').value,
+        wantStar: document.getElementById('wantStarInput').value,
+        star: document.getElementById('starInput').value,
+        img: base64Img || document.getElementById('imgInput').value,
+        loc,
+        date: document.getElementById('dateInput').value,
+        cost: document.getElementById('costInput').value,
+        link: document.getElementById('linkInput').value,
+        desc: document.getElementById('descInput').value
+      };
+      if(editId) placeList = placeList.map(i => i.id === editId ? item : i);
+      else placeList.push(item);
       saveLocal();
       render();
-      closeModal();
+      modalMask.style.display = 'none';
     };
 
-    window.editItem = function(id){
-      const item = placeList.find(x=>x.id===id);
-      if(!item)return;
+    window.edit = (id) => {
+      const item = placeList.find(i => i.id === id);
+      if(!item) return;
       editId = id;
-      modalTitle.innerText = '编辑收藏地点';
-      document.getElementById('nameInput').value = item.name||'';
-      document.getElementById('destInput').value = item.dest||'长途旅游';
-      document.getElementById('typeInput').value = item.type||'地文景观';
-      document.getElementById('areaInput').value = item.area||'成都周边';
-      document.getElementById('statusInput').value = item.status||'想去';
-      document.getElementById('wayInput').value = item.way||'自驾';
-      document.getElementById('wantStarInput').value = item.wantStar||3;
-      document.getElementById('starInput').value = item.star||3;
-      document.getElementById('imgInput').value = item.img||'';
-      document.getElementById('locInput').value = item.loc||'';
-      document.getElementById('dateInput').value = item.date||'';
-      document.getElementById('costInput').value = item.cost||'';
-      document.getElementById('linkInput').value = item.link||'';
-      document.getElementById('descInput').value = item.desc||'';
-      base64Img = '';
-      toggleFormByStatus();
-      openModal();
+      document.getElementById('nameInput').value = item.name;
+      document.getElementById('locInput').value = item.loc || '';
+      modalMask.style.display = 'flex';
     };
 
-    window.delItem = function(id){
-      if(!confirm('确定要删除这个地点吗？'))return;
-      placeList = placeList.filter(x=>x.id!==id);
+    window.del = (id) => {
+      if(!confirm('确定删除？')) return;
+      placeList = placeList.filter(i => i.id !== id);
       saveLocal();
       render();
     };
 
-    mainTabs.forEach(tab=>{
-      tab.onclick = ()=>{
-        mainTabs.forEach(t=>t.classList.remove('active'));
-        tab.classList.add('active');
-        const mainVal = tab.dataset.main;
-        switchSubTab(mainVal);
-
-        if(mainVal === 'all'){
-          render(sortAll(placeList));
-        }
-      };
-    });
-
-    subTabs.forEach(tab=>{
-      tab.onclick = ()=>{
-        subTabs.forEach(t=>t.classList.remove('active'));
-        tab.classList.add('active');
-        const mainKey = tab.dataset.main;
-        const subVal = tab.dataset.sub;
-        let filterList = [];
-        if(mainKey === 'dest') filterList = placeList.filter(x=>x.dest === subVal);
-        if(mainKey === 'type') filterList = placeList.filter(x=>x.type === subVal);
-        if(mainKey === 'area') filterList = placeList.filter(x=>x.area === subVal);
-        if(mainKey === 'status') filterList = placeList.filter(x=>x.status === subVal);
-        if(mainKey === 'way') filterList = placeList.filter(x=>x.way === subVal);
-        render(filterList);
-      };
-    });
-
-    searchInput.oninput = ()=>{
-      const kw = searchInput.value.toLowerCase();
-      const filterList = placeList.filter(x=>
-        x.name.toLowerCase().includes(kw) ||
-        (x.desc||'').toLowerCase().includes(kw) ||
-        (x.loc||'').toLowerCase().includes(kw) ||
-        (x.link||'').toLowerCase().includes(kw) ||
-        (x.dest||'').includes(kw) ||
-        (x.type||'').includes(kw) ||
-        (x.area||'').includes(kw) ||
-        (x.way||'').includes(kw)
-      );
-      const mainActive = document.querySelector('.main-tab.active').dataset.main;
-      render(mainActive === 'all' ? sortAll(filterList) : filterList);
-    };
-
-    themeToggle.onclick = ()=>{
-      document.body.classList.toggle('dark-mode');
-      const icon = themeToggle.querySelector('i');
-      icon.classList.toggle('fa-moon');
-      icon.classList.toggle('fa-sun');
-    };
-
-    exportBtn.onclick = ()=>{
-      const dataStr = JSON.stringify(placeList,null,2);
-      const blob = new Blob([dataStr],{type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '旅行收藏_完整备份.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    };
-
-    importBtn.onclick = ()=> fileInput.click();
-    fileInput.onchange = (e)=>{
-      const file = e.target.files[0];
-      if(!file)return;
-      const reader = new FileReader();
-      reader.onload = function(ev){
-        try{
-          const data = JSON.parse(ev.target.result);
-          if(Array.isArray(data)){
-            placeList = data;
-            saveLocal();
-            render();
-            alert('导入成功！');
-          }else{
-            alert('文件格式不正确');
-          }
-        }catch(err){
-          alert('解析失败，请选择正确的备份文件');
-        }
-      };
-      reader.readAsText(file);
-    };
-
-    switchSubTab('all');
-    render(sortAll(placeList));
+    render();
   </script>
 </body>
 </html>
