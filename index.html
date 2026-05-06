@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的旅行&露营收藏管理系统</title>
-  <!-- 🔥 这里换成了你的 Web端(JS API) Key → 负责显示地图 -->
+  <!-- 高德JS API 地图专用Key -->
   <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=1f052d38a8c20f59b669c054588fee44"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -588,7 +588,7 @@
 
       <div class="form-item">
         <label>详细地址 / 定位地点</label>
-        <input type="text" id="locInput" placeholder="输入详细地址，如：成都市都江堰青城山">
+        <input type="text" id="locInput" placeholder="输入详细地址，如：成都市都江堰景区">
       </div>
 
       <div class="form-item">
@@ -611,7 +611,7 @@
 
   <input type="file" id="fileInput" accept=".json" style="display:none">
 
-  <footer>我的旅行露营收藏系统 · 带高德地图+攻略链接+想去指数版</footer>
+  <footer>我的旅行露营收藏系统 · 带高德地图+精准定位版</footer>
 
   <script>
     let placeList = JSON.parse(localStorage.getItem('placeList')) || [];
@@ -620,7 +620,7 @@
     let map = null;
     let currentLoc = "";
 
-    // 🔥 你的 Web服务Key（专门用来解析地址）
+    // 高德Web服务Key 用于地址解析
     const WEB_SERVICE_KEY = "c1160431fd17d5803b246e42aa68064d";
 
     const listWrap = document.getElementById('listWrap');
@@ -661,40 +661,45 @@
     }
     statusInput.onchange = toggleFormByStatus;
 
-    function initMap(address, areaName = ''){
-      currentLoc = address || '';
-      const fullAddress = areaName && address ? areaName + ' ' + address : address;
+    // 核心：修复精准定位、自动居中、自动放大、打点标记
+    function initMap(address, areaName = '') {
+      const fullAddress = (areaName ? areaName + ' ' : '') + address;
 
-      if(!map){
+      if (!map) {
         map = new AMap.Map('mapContainer', {
-          zoom: 12,
-          center: [104.0668,30.5729]
+          zoom: 5,
+          center: [104.0668, 30.5729],
         });
       }
+
       map.clearMap();
 
-      if(fullAddress){
-        AMap.plugin('AMap.Geocoder', function(){
-          const geocoder = new AMap.Geocoder({ 
-            city: '全国',
-            key: WEB_SERVICE_KEY // 🔥 这里用 Web服务Key 解析
-          });
-          geocoder.getLocation(fullAddress, function(status, result){
-            if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
-              const lnglat = result.geocodes[0].location;
-              map.setCenter(lnglat);
-              map.setZoom(14);
-              const marker = new AMap.Marker({ position: lnglat });
-              map.add(marker);
-            } else {
-              alert('⚠️ 地址解析失败，请填写更完整的地址（如：四川 青城山）');
-              map.setCenter([104.0668,30.5729]);
-              map.setZoom(10);
-            }
-          });
+      AMap.plugin(["AMap.Geocoder"], () => {
+        const geocoder = new AMap.Geocoder({
+          city: "全国",
+          key: WEB_SERVICE_KEY
         });
-      }
-      mapMask.style.display = 'flex';
+
+        geocoder.getLocation(fullAddress, (status, result) => {
+          if (status === "complete" && result.geocodes && result.geocodes.length > 0) {
+            const position = result.geocodes[0].location;
+            // 飞到目标位置
+            map.setCenter(position);
+            // 放大到16级街道视图
+            map.setZoom(16);
+            // 添加红色标记点
+            const marker = new AMap.Marker({
+              position,
+              title: fullAddress,
+            });
+            map.add(marker);
+          } else {
+            alert('地址解析失败，请输入更详细地址\n示例：成都市都江堰景区、北京市故宫博物院');
+          }
+        });
+      });
+
+      mapMask.style.display = "flex";
     }
 
     mapClose.onclick = ()=>{
@@ -763,7 +768,6 @@
       initMap(addr, area);
     };
 
-    // ✅ 全部：隐藏所有子标签
     function switchSubTab(mainVal){
       subTabs.forEach(tab=>{
         tab.classList.toggle('show', mainVal !== 'all' && tab.dataset.main === mainVal);
@@ -820,7 +824,7 @@
     saveBtn.onclick = ()=>{
       const name = document.getElementById('nameInput').value.trim();
       const dest = document.getElementById('destInput').value;
-      const type = document.getElementById('typeInput').value;
+      const type = document.getElementById('areaInput').value;
       const area = document.getElementById('areaInput').value;
       const status = document.getElementById('statusInput').value;
       const way = document.getElementById('wayInput').value;
