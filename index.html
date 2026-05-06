@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的旅行&露营收藏管理系统</title>
+  <!-- 高德地图JS -->
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=179a8ee5962778f90872529502f05590"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -78,6 +80,16 @@
       border: 1px solid var(--border);
       color: var(--text);
     }
+    .btn-map {
+      background: #27ae60;
+      color: #fff;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      margin-top: 0.3rem;
+    }
     .theme-btn {
       background: none;
       border: none;
@@ -111,7 +123,6 @@
       color: var(--text);
       font-size: 1rem;
     }
-    /* 主标签栏 */
     .main-filter {
       display: flex;
       gap: 0.6rem;
@@ -134,7 +145,6 @@
       color: #fff;
       border-color: var(--primary);
     }
-    /* 子标签栏 */
     .sub-filter {
       display: flex;
       gap: 0.6rem;
@@ -302,6 +312,45 @@
       font-size: 0.8rem;
       color: var(--subtext);
     }
+    /* 地图弹窗 */
+    .map-mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-box {
+      width: 95%;
+      max-width: 800px;
+      height: 70vh;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    #mapContainer {
+      width: 100%;
+      height: 100%;
+    }
+    .map-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -324,7 +373,6 @@
       <input type="text" id="searchInput" placeholder="搜索目的地/备注/标签...">
     </div>
 
-    <!-- 主标签 -->
     <div class="main-filter">
       <div class="main-tab active" data-main="all">全部</div>
       <div class="main-tab" data-main="dest">目的地</div>
@@ -334,15 +382,12 @@
       <div class="main-tab" data-main="way">出行方式</div>
     </div>
 
-    <!-- 子标签容器 -->
     <div class="sub-filter" id="subFilter">
-      <!-- 目的地子标签 -->
       <div class="sub-tab show" data-main="dest" data-sub="长途旅游">长途旅游</div>
       <div class="sub-tab show" data-main="dest" data-sub="露营">露营</div>
       <div class="sub-tab show" data-main="dest" data-sub="特种兵旅游">特种兵旅游</div>
       <div class="sub-tab show" data-main="dest" data-sub="周边一日游">周边一日游</div>
 
-      <!-- 景观类型子标签 -->
       <div class="sub-tab" data-main="type" data-sub="地文景观">地文景观</div>
       <div class="sub-tab" data-main="type" data-sub="水域风光">水域风光</div>
       <div class="sub-tab" data-main="type" data-sub="生物景观">生物景观</div>
@@ -351,17 +396,43 @@
       <div class="sub-tab" data-main="type" data-sub="建筑设施">建筑设施</div>
       <div class="sub-tab" data-main="type" data-sub="人文活动">人文活动</div>
 
-      <!-- 地区子标签 -->
       <div class="sub-tab" data-main="area" data-sub="成都周边">成都周边</div>
       <div class="sub-tab" data-main="area" data-sub="川西">川西</div>
-      <div class="sub-tab" data-main="area" data-sub="国内其它省市">国内其它省市</div>
       <div class="sub-tab" data-main="area" data-sub="国外">国外</div>
+      <div class="sub-tab" data-main="area" data-sub="四川">四川</div>
+      <div class="sub-tab" data-main="area" data-sub="重庆">重庆</div>
+      <div class="sub-tab" data-main="area" data-sub="云南">云南</div>
+      <div class="sub-tab" data-main="area" data-sub="贵州">贵州</div>
+      <div class="sub-tab" data-main="area" data-sub="西藏">西藏</div>
+      <div class="sub-tab" data-main="area" data-sub="陕西">陕西</div>
+      <div class="sub-tab" data-main="area" data-sub="甘肃">甘肃</div>
+      <div class="sub-tab" data-main="area" data-sub="青海">青海</div>
+      <div class="sub-tab" data-main="area" data-sub="新疆">新疆</div>
+      <div class="sub-tab" data-main="area" data-sub="内蒙古">内蒙古</div>
+      <div class="sub-tab" data-main="area" data-sub="广东">广东</div>
+      <div class="sub-tab" data-main="area" data-sub="广西">广西</div>
+      <div class="sub-tab" data-main="area" data-sub="湖南">湖南</div>
+      <div class="sub-tab" data-main="area" data-sub="湖北">湖北</div>
+      <div class="sub-tab" data-main="area" data-sub="浙江">浙江</div>
+      <div class="sub-tab" data-main="area" data-sub="江苏">江苏</div>
+      <div class="sub-tab" data-main="area" data-sub="上海">上海</div>
+      <div class="sub-tab" data-main="area" data-sub="北京">北京</div>
+      <div class="sub-tab" data-main="area" data-sub="天津">天津</div>
+      <div class="sub-tab" data-main="area" data-sub="河北">河北</div>
+      <div class="sub-tab" data-main="area" data-sub="河南">河南</div>
+      <div class="sub-tab" data-main="area" data-sub="山东">山东</div>
+      <div class="sub-tab" data-main="area" data-sub="山西">山西</div>
+      <div class="sub-tab" data-main="area" data-sub="辽宁">辽宁</div>
+      <div class="sub-tab" data-main="area" data-sub="吉林">吉林</div>
+      <div class="sub-tab" data-main="area" data-sub="黑龙江">黑龙江</div>
+      <div class="sub-tab" data-main="area" data-sub="福建">福建</div>
+      <div class="sub-tab" data-main="area" data-sub="海南">海南</div>
+      <div class="sub-tab" data-main="area" data-sub="江西">江西</div>
+      <div class="sub-tab" data-main="area" data-sub="安徽">安徽</div>
 
-      <!-- 状态子标签 -->
       <div class="sub-tab" data-main="status" data-sub="想去">想去</div>
       <div class="sub-tab" data-main="status" data-sub="已去">已去</div>
 
-      <!-- 出行方式子标签 -->
       <div class="sub-tab" data-main="way" data-sub="自驾">自驾</div>
       <div class="sub-tab" data-main="way" data-sub="跟团">跟团</div>
       <div class="sub-tab" data-main="way" data-sub="火车">火车</div>
@@ -409,8 +480,37 @@
         <select id="areaInput">
           <option value="成都周边">成都周边</option>
           <option value="川西">川西</option>
-          <option value="国内其它省市">国内其它省市</option>
           <option value="国外">国外</option>
+          <option value="四川">四川</option>
+          <option value="重庆">重庆</option>
+          <option value="云南">云南</option>
+          <option value="贵州">贵州</option>
+          <option value="西藏">西藏</option>
+          <option value="陕西">陕西</option>
+          <option value="甘肃">甘肃</option>
+          <option value="青海">青海</option>
+          <option value="新疆">新疆</option>
+          <option value="内蒙古">内蒙古</option>
+          <option value="广东">广东</option>
+          <option value="广西">广西</option>
+          <option value="湖南">湖南</option>
+          <option value="湖北">湖北</option>
+          <option value="浙江">浙江</option>
+          <option value="江苏">江苏</option>
+          <option value="上海">上海</option>
+          <option value="北京">北京</option>
+          <option value="天津">天津</option>
+          <option value="河北">河北</option>
+          <option value="河南">河南</option>
+          <option value="山东">山东</option>
+          <option value="山西">山西</option>
+          <option value="辽宁">辽宁</option>
+          <option value="吉林">吉林</option>
+          <option value="黑龙江">黑龙江</option>
+          <option value="福建">福建</option>
+          <option value="海南">海南</option>
+          <option value="江西">江西</option>
+          <option value="安徽">安徽</option>
         </select>
       </div>
 
@@ -449,10 +549,12 @@
         <div class="tip">或填写图片链接</div>
         <input type="text" id="imgInput" placeholder="粘贴图片网址">
       </div>
+
       <div class="form-item">
-        <label>地图定位/地址</label>
-        <input type="text" id="locInput" placeholder="填写地址或经纬度">
+        <label>详细地址 / 定位地点</label>
+        <input type="text" id="locInput" placeholder="输入详细地址，如：成都市都江堰青城山">
       </div>
+
       <div class="form-item">
         <label>出行日期</label>
         <input type="date" id="dateInput">
@@ -472,15 +574,24 @@
     </div>
   </div>
 
-  <!-- 导入隐藏文件 -->
+  <!-- 地图弹窗 -->
+  <div class="map-mask" id="mapMask">
+    <div class="map-box">
+      <button class="map-close" id="mapClose">×</button>
+      <div id="mapContainer"></div>
+    </div>
+  </div>
+
   <input type="file" id="fileInput" accept=".json" style="display:none">
 
-  <footer>我的旅行露营收藏系统 · 本地永久保存 · 分级标签版</footer>
+  <footer>我的旅行露营收藏系统 · 带高德地图定位版</footer>
 
   <script>
     let placeList = JSON.parse(localStorage.getItem('placeList')) || [];
     let editId = null;
     let base64Img = "";
+    let map = null;
+    let currentLoc = "";
 
     const listWrap = document.getElementById('listWrap');
     const modalMask = document.getElementById('modalMask');
@@ -496,19 +607,55 @@
     const importBtn = document.getElementById('importBtn');
     const fileInput = document.getElementById('fileInput');
     const imgFileInput = document.getElementById('imgFileInput');
+    const mapMask = document.getElementById('mapMask');
+    const mapClose = document.getElementById('mapClose');
 
-    // 保存本地
     function saveLocal(){
       localStorage.setItem('placeList',JSON.stringify(placeList));
     }
 
-    // 渲染列表
+    // 初始化地图
+    function initMap(address){
+      currentLoc = address || '';
+      if(!map){
+        map = new AMap.Map('mapContainer', {
+          zoom: 12,
+          center: [104.0668,30.5729] // 默认成都
+        });
+      }
+      map.clearMap();
+      if(address){
+        AMap.plugin('AMap.Geocoder', function(){
+          let geocoder = new AMap.Geocoder();
+          geocoder.getLocation(address, function(status, result){
+            if(status === 'complete' && result.geocodes.length > 0){
+              let lnglat = result.geocodes[0].location;
+              map.setCenter(lnglat);
+              map.setZoom(14);
+              let marker = new AMap.Marker({position: lnglat});
+              map.add(marker);
+            }
+          })
+        })
+      }
+      mapMask.style.display = 'flex';
+    }
+
+    // 关闭地图
+    mapClose.onclick = ()=>{
+      mapMask.style.display = 'none';
+    };
+    mapMask.onclick = (e)=>{
+      if(e.target === mapMask) mapMask.style.display = 'none';
+    };
+
     function render(list = placeList){
       listWrap.innerHTML = '';
       list.forEach(item=>{
         const starStr = '★'.repeat(item.star||3);
         const costText = item.cost ? `花费：${item.cost}元` : '';
         const dateText = item.date ? `日期：${item.date}` : '';
+        const locText = item.loc || '';
 
         const card = `
           <div class="card" data-id="${item.id}">
@@ -522,7 +669,8 @@
               <div class="card-status">出行方式：${item.way||'自驾'}</div>
               <div class="card-status">${dateText} ${costText}</div>
               <div class="card-desc">${item.desc||''}</div>
-              <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${item.loc||'未填写地址'}</div>
+              <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${locText||'未填写地址'}</div>
+              ${locText ? `<button class="btn-map" onclick="openSiteMap('${locText}')"><i class="fas fa-map"></i> 查看地图定位</button>` : ''}
               <div class="card-ops">
                 <button class="edit-btn" onclick="editItem(${item.id})"><i class="fas fa-edit"></i> 编辑</button>
                 <button class="del-btn" onclick="delItem(${item.id})"><i class="fas fa-trash"></i> 删除</button>
@@ -534,7 +682,11 @@
       });
     }
 
-    // 切换子标签显示
+    // 全局打开地图
+    window.openSiteMap = function(addr){
+      initMap(addr);
+    };
+
     function switchSubTab(mainVal){
       subTabs.forEach(tab=>{
         if(mainVal === 'all'){
@@ -545,7 +697,6 @@
       });
     }
 
-    // 打开弹窗
     function openModal(){
       modalMask.style.display = 'flex';
     }
@@ -555,7 +706,6 @@
       editId = null;
     }
 
-    // 重置表单
     function resetForm(){
       document.getElementById('nameInput').value = '';
       document.getElementById('destInput').value = '长途旅游';
@@ -573,7 +723,6 @@
       imgFileInput.value = '';
     }
 
-    // 图片转base64
     imgFileInput.onchange = function(e){
       const file = e.target.files[0];
       if(!file)return;
@@ -584,7 +733,6 @@
       reader.readAsDataURL(file);
     };
 
-    // 新增
     addBtn.onclick = ()=>{
       modalTitle.innerText = '新增收藏地点';
       resetForm();
@@ -593,7 +741,6 @@
 
     cancelBtn.onclick = closeModal;
 
-    // 保存
     saveBtn.onclick = ()=>{
       const name = document.getElementById('nameInput').value.trim();
       const dest = document.getElementById('destInput').value;
@@ -625,7 +772,6 @@
       closeModal();
     };
 
-    // 编辑
     window.editItem = function(id){
       const item = placeList.find(x=>x.id===id);
       if(!item)return;
@@ -647,7 +793,6 @@
       openModal();
     };
 
-    // 删除
     window.delItem = function(id){
       if(!confirm('确定要删除这个地点吗？'))return;
       placeList = placeList.filter(x=>x.id!==id);
@@ -655,7 +800,6 @@
       render();
     };
 
-    // 主标签切换
     mainTabs.forEach(tab=>{
       tab.onclick = ()=>{
         mainTabs.forEach(t=>t.classList.remove('active'));
@@ -665,7 +809,6 @@
       };
     });
 
-    // 子标签筛选
     subTabs.forEach(tab=>{
       tab.onclick = ()=>{
         subTabs.forEach(t=>t.classList.remove('active'));
@@ -682,7 +825,6 @@
       };
     });
 
-    // 搜索
     searchInput.oninput = ()=>{
       const kw = searchInput.value.toLowerCase();
       const filterList = placeList.filter(x=>
@@ -697,7 +839,6 @@
       render(filterList);
     };
 
-    // 暗黑模式
     themeToggle.onclick = ()=>{
       document.body.classList.toggle('dark-mode');
       const icon = themeToggle.querySelector('i');
@@ -705,19 +846,17 @@
       icon.classList.toggle('fa-sun');
     };
 
-    // 导出
     exportBtn.onclick = ()=>{
       const dataStr = JSON.stringify(placeList,null,2);
       const blob = new Blob([dataStr],{type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '旅行露营收藏分级标签数据.json';
+      a.download = '旅行露营收藏带地图数据.json';
       a.click();
       URL.revokeObjectURL(url);
     };
 
-    // 导入
     importBtn.onclick = ()=> fileInput.click();
     fileInput.onchange = (e)=>{
       const file = e.target.files[0];
@@ -741,7 +880,6 @@
       reader.readAsText(file);
     };
 
-    // 初始渲染
     switchSubTab('all');
     render();
   </script>
