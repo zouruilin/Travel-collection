@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的旅行&露营收藏管理系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+    :root {
+      --primary: #42a5f5;
+      --bg: #ffffff;
+      --card: #f8f9fa;
+      --text: #333333;
+      --subtext: #666666;
+      --border: #eee;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .dark-mode {
+      --primary: #64b5f6;
+      --bg: #121212;
+      --card: #1e1e1e;
+      --text: #e0e0e0;
+      --subtext: #aaa;
+      --border: #333;
+      --shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    body {
+      font-family: "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 99;
+      box-shadow: var(--shadow);
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-btns {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .theme-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: var(--text);
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 1.5rem auto;
+      padding: 0 5%;
+    }
+    .search-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .tab {
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .section-title {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .card-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .card-body {
+      padding: 1rem;
+    }
+    .card-tag {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      background: #e3f2fd;
+      color: #1976d2;
+      margin-bottom: 0.4rem;
+    }
+    .card-tag.camp {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+    .card-tag.label {
+      background: #fff3e0;
+      color: #f57c00;
+      margin: 0.2rem 0.2rem 0.2rem 0;
+    }
+    .card-status {
+      font-size: 0.75rem;
+      color: var(--subtext);
+      margin: 0.3rem 0;
+    }
+    .star {
+      color: #ffb400;
+    }
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--subtext);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+    .card-ops {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+    .card-ops button {
+      flex: 1;
+      padding: 0.4rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .edit-btn {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    .del-btn {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+    .modal-mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .modal {
+      background: var(--card);
+      width: 90%;
+      max-width: 500px;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h3 {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .form-item {
+      margin-bottom: 1rem;
+    }
+    .form-item label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+    }
+    .form-item input,
+    .form-item select,
+    .form-item textarea {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .modal-btns button {
+      flex: 1;
+      padding: 0.7rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--subtext);
+      margin-top: 3rem;
+      border-top: 1px solid var(--border);
+    }
+    .tip {
+      font-size: 0.8rem;
+      color: var(--subtext);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <i class="fas fa-map-marked-alt"></i>
+      旅行&露营收藏管理
+    </div>
+    <div class="header-btns">
+      <button class="btn btn-outline" id="exportBtn"><i class="fas fa-download"></i> 导出</button>
+      <button class="btn btn-outline" id="importBtn"><i class="fas fa-upload"></i> 导入</button>
+      <button class="btn btn-primary" id="addBtn"><i class="fas fa-plus"></i> 新增地点</button>
+      <button class="theme-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" placeholder="搜索目的地/露营地/备注/标签...">
+    </div>
+
+    <div class="filter-tabs">
+      <div class="tab active" data-type="all">全部</div>
+      <div class="tab" data-type="travel">旅游目的地</div>
+      <div class="tab" data-type="camp">露营地</div>
+      <div class="tab" data-status="wish">想去</div>
+      <div class="tab" data-status="done">已去过</div>
+      <div class="tab" data-label="山水">山水</div>
+      <div class="tab" data-label="草原">草原</div>
+      <div class="tab" data-label="亲子">亲子</div>
+      <div class="tab" data-label="自驾">自驾</div>
+    </div>
+
+    <h2 class="section-title"><i class="fas fa-map"></i> 收藏列表</h2>
+    <div class="grid" id="listWrap"></div>
+  </div>
+
+  <!-- 新增/编辑弹窗 -->
+  <div class="modal-mask" id="modalMask">
+    <div class="modal">
+      <h3 id="modalTitle">新增收藏地点</h3>
+      <div class="form-item">
+        <label>地点名称</label>
+        <input type="text" id="nameInput" placeholder="输入景点/露营地名称">
+      </div>
+      <div class="form-item">
+        <label>类型</label>
+        <select id="typeInput">
+          <option value="travel">旅游目的地</option>
+          <option value="camp">露营地</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>状态</label>
+        <select id="statusInput">
+          <option value="wish">想去</option>
+          <option value="done">已去过</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>星级评分</label>
+        <select id="starInput">
+          <option value="1">★</option>
+          <option value="2">★★</option>
+          <option value="3" selected>★★★</option>
+          <option value="4">★★★★</option>
+          <option value="5">★★★★★</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>图片（本地上传）</label>
+        <input type="file" id="imgFileInput" accept="image/*">
+        <div class="tip">或填写图片链接</div>
+        <input type="text" id="imgInput" placeholder="粘贴图片网址">
+      </div>
+      <div class="form-item">
+        <label>地图定位/地址</label>
+        <input type="text" id="locInput" placeholder="填写地址或经纬度">
+      </div>
+      <div class="form-item">
+        <label>出行日期</label>
+        <input type="date" id="dateInput">
+      </div>
+      <div class="form-item">
+        <label>花费（元）</label>
+        <input type="number" id="costInput" placeholder="例如：500">
+      </div>
+      <div class="form-item">
+        <label>标签（用逗号分隔，如：山水,自驾）</label>
+        <input type="text" id="labelInput" placeholder="山水,草原,亲子,自驾">
+      </div>
+      <div class="form-item">
+        <label>备注简介</label>
+        <textarea id="descInput" rows="3" placeholder="写下攻略、感受、注意事项"></textarea>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" id="cancelBtn">取消</button>
+        <button class="btn btn-primary" id="saveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导入隐藏文件 -->
+  <input type="file" id="fileInput" accept=".json" style="display:none">
+
+  <footer>我的旅行露营收藏系统 · 本地永久保存 · 免费部署版</footer>
+
+  <script>
+    // 初始默认数据
+    let placeList = JSON.parse(localStorage.getItem('placeList')) || [
+      {
+        id:1,
+        name:"大理洱海",
+        type:"travel",
+        status:"wish",
+        star:5,
+        img:"https://picsum.photos/seed/dali/600/400",
+        loc:"云南大理",
+        date:"",
+        cost:"",
+        label:"山水,自驾",
+        desc:"环湖骑行，风花雪月"
+      },
+      {
+        id:2,
+        name:"千岛湖星空营地",
+        type:"camp",
+        status:"done",
+        star:4,
+        img:"https://picsum.photos/seed/qiandaohu/600/400",
+        loc:"浙江千岛湖",
+        date:"2026-04-30",
+        cost:"800",
+        label:"山水,亲子",
+        desc:"临湖露营，星空绝美"
+      }
+    ];
+
+    let editId = null;
+    let base64Img = "";
+
+    // 元素
+    const listWrap = document.getElementById('listWrap');
+    const modalMask = document.getElementById('modalMask');
+    const modalTitle = document.getElementById('modalTitle');
+    const addBtn = document.getElementById('addBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const searchInput = document.getElementById('searchInput');
+    const tabs = document.querySelectorAll('.tab');
+    const themeToggle = document.getElementById('themeToggle');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const fileInput = document.getElementById('fileInput');
+    const imgFileInput = document.getElementById('imgFileInput');
+
+    // 保存到本地存储
+    function saveLocal(){
+      localStorage.setItem('placeList',JSON.stringify(placeList));
+    }
+
+    // 渲染列表
+    function render(list = placeList){
+      listWrap.innerHTML = '';
+      list.forEach(item=>{
+        const starStr = '★'.repeat(item.star);
+        const typeText = item.type==='travel'?'旅游':'露营';
+        const statusText = item.status==='wish'?'想去':'已去过';
+        const labelArr = (item.label||'').split(',').filter(x=>x);
+        const labelHtml = labelArr.map(l=>`<span class="card-tag label">${l}</span>`).join('');
+        const costText = item.cost ? `花费：${item.cost}元` : '';
+        const dateText = item.date ? `日期：${item.date}` : '';
+
+        const card = `
+          <div class="card" data-id="${item.id}">
+            <img src="${item.img}" class="card-img" alt="${item.name}">
+            <div class="card-body">
+              <span class="card-tag ${item.type==='camp'?'camp':''}">${typeText}</span>
+              ${labelHtml}
+              <h3>${item.name}</h3>
+              <div class="card-status">${statusText} · <span class="star">${starStr}</span></div>
+              <div class="card-status">${dateText} ${costText}</div>
+              <div class="card-desc">${item.desc}</div>
+              <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${item.loc||'未填写地址'}</div>
+              <div class="card-ops">
+                <button class="edit-btn" onclick="editItem(${item.id})"><i class="fas fa-edit"></i> 编辑</button>
+                <button class="del-btn" onclick="delItem(${item.id})"><i class="fas fa-trash"></i> 删除</button>
+              </div>
+            </div>
+          </div>
+        `;
+        listWrap.innerHTML += card;
+      });
+    }
+
+    // 打开弹窗
+    function openModal(){
+      modalMask.style.display = 'flex';
+    }
+    // 关闭弹窗
+    function closeModal(){
+      modalMask.style.display = 'none';
+      resetForm();
+      editId = null;
+    }
+
+    // 重置表单
+    function resetForm(){
+      document.getElementById('nameInput').value = '';
+      document.getElementById('typeInput').value = 'travel';
+      document.getElementById('statusInput').value = 'wish';
+      document.getElementById('starInput').value = '3';
+      document.getElementById('imgInput').value = '';
+      document.getElementById('locInput').value = '';
+      document.getElementById('dateInput').value = '';
+      document.getElementById('costInput').value = '';
+      document.getElementById('labelInput').value = '';
+      document.getElementById('descInput').value = '';
+      base64Img = '';
+      imgFileInput.value = '';
+    }
+
+    // 图片转base64
+    imgFileInput.onchange = function(e){
+      const file = e.target.files[0];
+      if(!file)return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        base64Img = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // 新增
+    addBtn.onclick = ()=>{
+      modalTitle.innerText = '新增收藏地点';
+      resetForm();
+      openModal();
+    };
+
+    // 取消
+    cancelBtn.onclick = closeModal;
+
+    // 保存
+    saveBtn.onclick = ()=>{
+      const name = document.getElementById('nameInput').value.trim();
+      const type = document.getElementById('typeInput').value;
+      const status = document.getElementById('statusInput').value;
+      const star = parseInt(document.getElementById('starInput').value);
+      const img = base64Img || document.getElementById('imgInput').value.trim() || 'https://picsum.photos/seed/random/600/400';
+      const loc = document.getElementById('locInput').value.trim();
+      const date = document.getElementById('dateInput').value;
+      const cost = document.getElementById('costInput').value.trim();
+      const label = document.getElementById('labelInput').value.trim();
+      const desc = document.getElementById('descInput').value.trim();
+
+      if(!name){
+        alert('请输入地点名称');
+        return;
+      }
+
+      if(editId){
+        // 编辑
+        const idx = placeList.findIndex(x=>x.id===editId);
+        placeList[idx] = {...placeList[idx],name,type,status,star,img,loc,date,cost,label,desc};
+      }else{
+        // 新增
+        const newId = Date.now();
+        placeList.push({id:newId,name,type,status,star,img,loc,date,cost,label,desc});
+      }
+      saveLocal();
+      render();
+      closeModal();
+    };
+
+    // 编辑
+    window.editItem = function(id){
+      const item = placeList.find(x=>x.id===id);
+      if(!item)return;
+      editId = id;
+      modalTitle.innerText = '编辑收藏地点';
+      document.getElementById('nameInput').value = item.name;
+      document.getElementById('typeInput').value = item.type;
+      document.getElementById('statusInput').value = item.status;
+      document.getElementById('starInput').value = item.star;
+      document.getElementById('imgInput').value = item.img.startsWith('data:') ? '' : item.img;
+      document.getElementById('locInput').value = item.loc;
+      document.getElementById('dateInput').value = item.date||'';
+      document.getElementById('costInput').value = item.cost||'';
+      document.getElementById('labelInput').value = item.label||'';
+      document.getElementById('descInput').value = item.desc;
+      base64Img = '';
+      openModal();
+    };
+
+    // 删除
+    window.delItem = function(id){
+      if(!confirm('确定要删除这个地点吗？'))return;
+      placeList = placeList.filter(x=>x.id!==id);
+      saveLocal();
+      render();
+    };
+
+    // 分类筛选
+    tabs.forEach(tab=>{
+      tab.onclick = ()=>{
+        tabs.forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const type = tab.dataset.type;
+        const status = tab.dataset.status;
+        const label = tab.dataset.label;
+        let filterList = placeList;
+        if(type) filterList = type==='all' ? placeList : placeList.filter(x=>x.type===type);
+        if(status) filterList = placeList.filter(x=>x.status===status);
+        if(label) filterList = placeList.filter(x=>(x.label||'').includes(label));
+        render(filterList);
+      };
+    });
+
+    // 搜索
+    searchInput.oninput = ()=>{
+      const kw = searchInput.value.toLowerCase();
+      const filterList = placeList.filter(x=>
+        x.name.toLowerCase().includes(kw) ||
+        x.desc.toLowerCase().includes(kw) ||
+        x.loc.toLowerCase().includes(kw) ||
+        (x.label||'').toLowerCase().includes(kw)
+      );
+      render(filterList);
+    };
+
+    // 暗黑模式
+    themeToggle.onclick = ()=>{
+      document.body.classList.toggle('dark-mode');
+      const icon = themeToggle.querySelector('i');
+      icon.classList.toggle('fa-moon');
+      icon.classList.toggle('fa-sun');
+    };
+
+    // 导出JSON
+    exportBtn.onclick = ()=>{
+      const dataStr = JSON.stringify(placeList,null,2);
+      const blob = new Blob([dataStr],{type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '旅行露营收藏数据.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // 导入JSON
+    importBtn.onclick = ()=> fileInput.click();
+    fileInput.onchange = (e)=>{
+      const file = e.target.files[0];
+      if(!file)return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        try{
+          const data = JSON.parse(ev.target.result);
+          if(Array.isArray(data)){
+            placeList = data;
+            saveLocal();
+            render();
+            alert('导入成功！');
+          }else{
+            alert('文件格式不正确');
+          }
+        }catch(err){
+          alert('解析失败，请选择正确的JSON文件');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    // 初始渲染
+    render();
+  </script>
+</body>
+</html>
