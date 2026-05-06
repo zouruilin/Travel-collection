@@ -111,21 +111,49 @@
       color: var(--text);
       font-size: 1rem;
     }
-    .filter-tabs {
+    /* 主标签栏 */
+    .main-filter {
       display: flex;
-      gap: 0.8rem;
+      gap: 0.6rem;
       flex-wrap: wrap;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
     }
-    .tab {
+    .main-tab {
       padding: 0.4rem 1rem;
       border-radius: 30px;
       background: var(--card);
       border: 1px solid var(--border);
       cursor: pointer;
       font-size: 0.9rem;
+      font-weight: 500;
     }
-    .tab.active {
+    .main-tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    /* 子标签栏 */
+    .sub-filter {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .sub-tab {
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .sub-tab.show {
+      display: block;
+    }
+    .sub-tab.active {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
@@ -167,15 +195,6 @@
       border-radius: 4px;
       background: #e3f2fd;
       color: #1976d2;
-      margin-bottom: 0.4rem;
-    }
-    .card-tag.camp {
-      background: #e8f5e9;
-      color: #388e3c;
-    }
-    .card-tag.label {
-      background: #fff3e0;
-      color: #f57c00;
       margin: 0.2rem 0.2rem 0.2rem 0;
     }
     .card-status {
@@ -302,19 +321,51 @@
   <div class="container">
     <div class="search-box">
       <i class="fas fa-search"></i>
-      <input type="text" id="searchInput" placeholder="搜索目的地/露营地/备注/标签...">
+      <input type="text" id="searchInput" placeholder="搜索目的地/备注/标签...">
     </div>
 
-    <div class="filter-tabs">
-      <div class="tab active" data-type="all">全部</div>
-      <div class="tab" data-type="travel">旅游目的地</div>
-      <div class="tab" data-type="camp">露营地</div>
-      <div class="tab" data-status="wish">想去</div>
-      <div class="tab" data-status="done">已去过</div>
-      <div class="tab" data-label="山水">山水</div>
-      <div class="tab" data-label="草原">草原</div>
-      <div class="tab" data-label="亲子">亲子</div>
-      <div class="tab" data-label="自驾">自驾</div>
+    <!-- 主标签 -->
+    <div class="main-filter">
+      <div class="main-tab active" data-main="all">全部</div>
+      <div class="main-tab" data-main="dest">目的地</div>
+      <div class="main-tab" data-main="type">景观类型</div>
+      <div class="main-tab" data-main="area">地区</div>
+      <div class="main-tab" data-main="status">状态</div>
+      <div class="main-tab" data-main="way">出行方式</div>
+    </div>
+
+    <!-- 子标签容器 -->
+    <div class="sub-filter" id="subFilter">
+      <!-- 目的地子标签 -->
+      <div class="sub-tab show" data-main="dest" data-sub="长途旅游">长途旅游</div>
+      <div class="sub-tab show" data-main="dest" data-sub="露营">露营</div>
+      <div class="sub-tab show" data-main="dest" data-sub="特种兵旅游">特种兵旅游</div>
+      <div class="sub-tab show" data-main="dest" data-sub="周边一日游">周边一日游</div>
+
+      <!-- 景观类型子标签 -->
+      <div class="sub-tab" data-main="type" data-sub="地文景观">地文景观</div>
+      <div class="sub-tab" data-main="type" data-sub="水域风光">水域风光</div>
+      <div class="sub-tab" data-main="type" data-sub="生物景观">生物景观</div>
+      <div class="sub-tab" data-main="type" data-sub="天象气候">天象气候</div>
+      <div class="sub-tab" data-main="type" data-sub="遗址遗迹">遗址遗迹</div>
+      <div class="sub-tab" data-main="type" data-sub="建筑设施">建筑设施</div>
+      <div class="sub-tab" data-main="type" data-sub="人文活动">人文活动</div>
+
+      <!-- 地区子标签 -->
+      <div class="sub-tab" data-main="area" data-sub="成都周边">成都周边</div>
+      <div class="sub-tab" data-main="area" data-sub="川西">川西</div>
+      <div class="sub-tab" data-main="area" data-sub="国内其它省市">国内其它省市</div>
+      <div class="sub-tab" data-main="area" data-sub="国外">国外</div>
+
+      <!-- 状态子标签 -->
+      <div class="sub-tab" data-main="status" data-sub="想去">想去</div>
+      <div class="sub-tab" data-main="status" data-sub="已去">已去</div>
+
+      <!-- 出行方式子标签 -->
+      <div class="sub-tab" data-main="way" data-sub="自驾">自驾</div>
+      <div class="sub-tab" data-main="way" data-sub="跟团">跟团</div>
+      <div class="sub-tab" data-main="way" data-sub="火车">火车</div>
+      <div class="sub-tab" data-main="way" data-sub="飞机">飞机</div>
     </div>
 
     <h2 class="section-title"><i class="fas fa-map"></i> 收藏列表</h2>
@@ -329,20 +380,58 @@
         <label>地点名称</label>
         <input type="text" id="nameInput" placeholder="输入景点/露营地名称">
       </div>
+
       <div class="form-item">
-        <label>类型</label>
+        <label>目的地分类</label>
+        <select id="destInput">
+          <option value="长途旅游">长途旅游</option>
+          <option value="露营">露营</option>
+          <option value="特种兵旅游">特种兵旅游</option>
+          <option value="周边一日游">周边一日游</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label>景观类型</label>
         <select id="typeInput">
-          <option value="travel">旅游目的地</option>
-          <option value="camp">露营地</option>
+          <option value="地文景观">地文景观</option>
+          <option value="水域风光">水域风光</option>
+          <option value="生物景观">生物景观</option>
+          <option value="天象气候">天象气候</option>
+          <option value="遗址遗迹">遗址遗迹</option>
+          <option value="建筑设施">建筑设施</option>
+          <option value="人文活动">人文活动</option>
         </select>
       </div>
+
       <div class="form-item">
-        <label>状态</label>
-        <select id="statusInput">
-          <option value="wish">想去</option>
-          <option value="done">已去过</option>
+        <label>所属地区</label>
+        <select id="areaInput">
+          <option value="成都周边">成都周边</option>
+          <option value="川西">川西</option>
+          <option value="国内其它省市">国内其它省市</option>
+          <option value="国外">国外</option>
         </select>
       </div>
+
+      <div class="form-item">
+        <label>出行状态</label>
+        <select id="statusInput">
+          <option value="想去">想去</option>
+          <option value="已去">已去</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label>出行方式</label>
+        <select id="wayInput">
+          <option value="自驾">自驾</option>
+          <option value="跟团">跟团</option>
+          <option value="火车">火车</option>
+          <option value="飞机">飞机</option>
+        </select>
+      </div>
+
       <div class="form-item">
         <label>星级评分</label>
         <select id="starInput">
@@ -353,6 +442,7 @@
           <option value="5">★★★★★</option>
         </select>
       </div>
+
       <div class="form-item">
         <label>图片（本地上传）</label>
         <input type="file" id="imgFileInput" accept="image/*">
@@ -372,10 +462,6 @@
         <input type="number" id="costInput" placeholder="例如：500">
       </div>
       <div class="form-item">
-        <label>标签（用逗号分隔，如：山水,自驾）</label>
-        <input type="text" id="labelInput" placeholder="山水,草原,亲子,自驾">
-      </div>
-      <div class="form-item">
         <label>备注简介</label>
         <textarea id="descInput" rows="3" placeholder="写下攻略、感受、注意事项"></textarea>
       </div>
@@ -389,43 +475,13 @@
   <!-- 导入隐藏文件 -->
   <input type="file" id="fileInput" accept=".json" style="display:none">
 
-  <footer>我的旅行露营收藏系统 · 本地永久保存 · 免费部署版</footer>
+  <footer>我的旅行露营收藏系统 · 本地永久保存 · 分级标签版</footer>
 
   <script>
-    // 初始默认数据
-    let placeList = JSON.parse(localStorage.getItem('placeList')) || [
-      {
-        id:1,
-        name:"大理洱海",
-        type:"travel",
-        status:"wish",
-        star:5,
-        img:"https://picsum.photos/seed/dali/600/400",
-        loc:"云南大理",
-        date:"",
-        cost:"",
-        label:"山水,自驾",
-        desc:"环湖骑行，风花雪月"
-      },
-      {
-        id:2,
-        name:"千岛湖星空营地",
-        type:"camp",
-        status:"done",
-        star:4,
-        img:"https://picsum.photos/seed/qiandaohu/600/400",
-        loc:"浙江千岛湖",
-        date:"2026-04-30",
-        cost:"800",
-        label:"山水,亲子",
-        desc:"临湖露营，星空绝美"
-      }
-    ];
-
+    let placeList = JSON.parse(localStorage.getItem('placeList')) || [];
     let editId = null;
     let base64Img = "";
 
-    // 元素
     const listWrap = document.getElementById('listWrap');
     const modalMask = document.getElementById('modalMask');
     const modalTitle = document.getElementById('modalTitle');
@@ -433,14 +489,15 @@
     const cancelBtn = document.getElementById('cancelBtn');
     const saveBtn = document.getElementById('saveBtn');
     const searchInput = document.getElementById('searchInput');
-    const tabs = document.querySelectorAll('.tab');
+    const mainTabs = document.querySelectorAll('.main-tab');
+    const subTabs = document.querySelectorAll('.sub-tab');
     const themeToggle = document.getElementById('themeToggle');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
     const fileInput = document.getElementById('fileInput');
     const imgFileInput = document.getElementById('imgFileInput');
 
-    // 保存到本地存储
+    // 保存本地
     function saveLocal(){
       localStorage.setItem('placeList',JSON.stringify(placeList));
     }
@@ -449,11 +506,7 @@
     function render(list = placeList){
       listWrap.innerHTML = '';
       list.forEach(item=>{
-        const starStr = '★'.repeat(item.star);
-        const typeText = item.type==='travel'?'旅游':'露营';
-        const statusText = item.status==='wish'?'想去':'已去过';
-        const labelArr = (item.label||'').split(',').filter(x=>x);
-        const labelHtml = labelArr.map(l=>`<span class="card-tag label">${l}</span>`).join('');
+        const starStr = '★'.repeat(item.star||3);
         const costText = item.cost ? `花费：${item.cost}元` : '';
         const dateText = item.date ? `日期：${item.date}` : '';
 
@@ -461,12 +514,14 @@
           <div class="card" data-id="${item.id}">
             <img src="${item.img}" class="card-img" alt="${item.name}">
             <div class="card-body">
-              <span class="card-tag ${item.type==='camp'?'camp':''}">${typeText}</span>
-              ${labelHtml}
+              <span class="card-tag">${item.dest||''}</span>
+              <span class="card-tag">${item.type||''}</span>
+              <span class="card-tag">${item.area||''}</span>
               <h3>${item.name}</h3>
-              <div class="card-status">${statusText} · <span class="star">${starStr}</span></div>
+              <div class="card-status">${item.status||'想去'} · <span class="star">${starStr}</span></div>
+              <div class="card-status">出行方式：${item.way||'自驾'}</div>
               <div class="card-status">${dateText} ${costText}</div>
-              <div class="card-desc">${item.desc}</div>
+              <div class="card-desc">${item.desc||''}</div>
               <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${item.loc||'未填写地址'}</div>
               <div class="card-ops">
                 <button class="edit-btn" onclick="editItem(${item.id})"><i class="fas fa-edit"></i> 编辑</button>
@@ -479,11 +534,21 @@
       });
     }
 
+    // 切换子标签显示
+    function switchSubTab(mainVal){
+      subTabs.forEach(tab=>{
+        if(mainVal === 'all'){
+          tab.classList.add('show');
+        }else{
+          tab.classList.toggle('show', tab.dataset.main === mainVal);
+        }
+      });
+    }
+
     // 打开弹窗
     function openModal(){
       modalMask.style.display = 'flex';
     }
-    // 关闭弹窗
     function closeModal(){
       modalMask.style.display = 'none';
       resetForm();
@@ -493,14 +558,16 @@
     // 重置表单
     function resetForm(){
       document.getElementById('nameInput').value = '';
-      document.getElementById('typeInput').value = 'travel';
-      document.getElementById('statusInput').value = 'wish';
+      document.getElementById('destInput').value = '长途旅游';
+      document.getElementById('typeInput').value = '地文景观';
+      document.getElementById('areaInput').value = '成都周边';
+      document.getElementById('statusInput').value = '想去';
+      document.getElementById('wayInput').value = '自驾';
       document.getElementById('starInput').value = '3';
       document.getElementById('imgInput').value = '';
       document.getElementById('locInput').value = '';
       document.getElementById('dateInput').value = '';
       document.getElementById('costInput').value = '';
-      document.getElementById('labelInput').value = '';
       document.getElementById('descInput').value = '';
       base64Img = '';
       imgFileInput.value = '';
@@ -524,20 +591,21 @@
       openModal();
     };
 
-    // 取消
     cancelBtn.onclick = closeModal;
 
     // 保存
     saveBtn.onclick = ()=>{
       const name = document.getElementById('nameInput').value.trim();
+      const dest = document.getElementById('destInput').value;
       const type = document.getElementById('typeInput').value;
+      const area = document.getElementById('areaInput').value;
       const status = document.getElementById('statusInput').value;
+      const way = document.getElementById('wayInput').value;
       const star = parseInt(document.getElementById('starInput').value);
       const img = base64Img || document.getElementById('imgInput').value.trim() || 'https://picsum.photos/seed/random/600/400';
       const loc = document.getElementById('locInput').value.trim();
       const date = document.getElementById('dateInput').value;
       const cost = document.getElementById('costInput').value.trim();
-      const label = document.getElementById('labelInput').value.trim();
       const desc = document.getElementById('descInput').value.trim();
 
       if(!name){
@@ -546,13 +614,11 @@
       }
 
       if(editId){
-        // 编辑
         const idx = placeList.findIndex(x=>x.id===editId);
-        placeList[idx] = {...placeList[idx],name,type,status,star,img,loc,date,cost,label,desc};
+        placeList[idx] = {...placeList[idx],name,dest,type,area,status,way,star,img,loc,date,cost,desc};
       }else{
-        // 新增
         const newId = Date.now();
-        placeList.push({id:newId,name,type,status,star,img,loc,date,cost,label,desc});
+        placeList.push({id:newId,name,dest,type,area,status,way,star,img,loc,date,cost,desc});
       }
       saveLocal();
       render();
@@ -566,15 +632,17 @@
       editId = id;
       modalTitle.innerText = '编辑收藏地点';
       document.getElementById('nameInput').value = item.name;
-      document.getElementById('typeInput').value = item.type;
-      document.getElementById('statusInput').value = item.status;
-      document.getElementById('starInput').value = item.star;
+      document.getElementById('destInput').value = item.dest||'长途旅游';
+      document.getElementById('typeInput').value = item.type||'地文景观';
+      document.getElementById('areaInput').value = item.area||'成都周边';
+      document.getElementById('statusInput').value = item.status||'想去';
+      document.getElementById('wayInput').value = item.way||'自驾';
+      document.getElementById('starInput').value = item.star||3;
       document.getElementById('imgInput').value = item.img.startsWith('data:') ? '' : item.img;
-      document.getElementById('locInput').value = item.loc;
+      document.getElementById('locInput').value = item.loc||'';
       document.getElementById('dateInput').value = item.date||'';
       document.getElementById('costInput').value = item.cost||'';
-      document.getElementById('labelInput').value = item.label||'';
-      document.getElementById('descInput').value = item.desc;
+      document.getElementById('descInput').value = item.desc||'';
       base64Img = '';
       openModal();
     };
@@ -587,18 +655,29 @@
       render();
     };
 
-    // 分类筛选
-    tabs.forEach(tab=>{
+    // 主标签切换
+    mainTabs.forEach(tab=>{
       tab.onclick = ()=>{
-        tabs.forEach(t=>t.classList.remove('active'));
+        mainTabs.forEach(t=>t.classList.remove('active'));
         tab.classList.add('active');
-        const type = tab.dataset.type;
-        const status = tab.dataset.status;
-        const label = tab.dataset.label;
-        let filterList = placeList;
-        if(type) filterList = type==='all' ? placeList : placeList.filter(x=>x.type===type);
-        if(status) filterList = placeList.filter(x=>x.status===status);
-        if(label) filterList = placeList.filter(x=>(x.label||'').includes(label));
+        const mainVal = tab.dataset.main;
+        switchSubTab(mainVal);
+      };
+    });
+
+    // 子标签筛选
+    subTabs.forEach(tab=>{
+      tab.onclick = ()=>{
+        subTabs.forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const mainKey = tab.dataset.main;
+        const subVal = tab.dataset.sub;
+        let filterList = [];
+        if(mainKey === 'dest') filterList = placeList.filter(x=>x.dest === subVal);
+        if(mainKey === 'type') filterList = placeList.filter(x=>x.type === subVal);
+        if(mainKey === 'area') filterList = placeList.filter(x=>x.area === subVal);
+        if(mainKey === 'status') filterList = placeList.filter(x=>x.status === subVal);
+        if(mainKey === 'way') filterList = placeList.filter(x=>x.way === subVal);
         render(filterList);
       };
     });
@@ -608,9 +687,12 @@
       const kw = searchInput.value.toLowerCase();
       const filterList = placeList.filter(x=>
         x.name.toLowerCase().includes(kw) ||
-        x.desc.toLowerCase().includes(kw) ||
-        x.loc.toLowerCase().includes(kw) ||
-        (x.label||'').toLowerCase().includes(kw)
+        (x.desc||'').toLowerCase().includes(kw) ||
+        (x.loc||'').toLowerCase().includes(kw) ||
+        (x.dest||'').includes(kw) ||
+        (x.type||'').includes(kw) ||
+        (x.area||'').includes(kw) ||
+        (x.way||'').includes(kw)
       );
       render(filterList);
     };
@@ -623,19 +705,19 @@
       icon.classList.toggle('fa-sun');
     };
 
-    // 导出JSON
+    // 导出
     exportBtn.onclick = ()=>{
       const dataStr = JSON.stringify(placeList,null,2);
       const blob = new Blob([dataStr],{type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '旅行露营收藏数据.json';
+      a.download = '旅行露营收藏分级标签数据.json';
       a.click();
       URL.revokeObjectURL(url);
     };
 
-    // 导入JSON
+    // 导入
     importBtn.onclick = ()=> fileInput.click();
     fileInput.onchange = (e)=>{
       const file = e.target.files[0];
@@ -660,6 +742,7 @@
     };
 
     // 初始渲染
+    switchSubTab('all');
     render();
   </script>
 </body>
