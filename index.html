@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的旅行&露营收藏管理系统</title>
-  <!-- 高德地图JS -->
-  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=179a8ee5962778f90872529502f05590"></script>
+  <!-- 已替换成你自己的高德Key -->
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=1f052d38a8c20f59b669c054588fee44"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -223,6 +223,16 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
       margin: 0.5rem 0;
+    }
+    .card-link {
+      font-size: 0.75rem;
+      word-break: break-all;
+      color: #42a5f5;
+      margin: 0.3rem 0;
+    }
+    .card-link a {
+      color: #42a5f5;
+      text-decoration: none;
     }
     .card-ops {
       display: flex;
@@ -533,7 +543,18 @@
       </div>
 
       <div class="form-item">
-        <label>星级评分</label>
+        <label>想去指数（五星）</label>
+        <select id="wantStarInput">
+          <option value="1">★</option>
+          <option value="2">★★</option>
+          <option value="3" selected>★★★</option>
+          <option value="4">★★★★</option>
+          <option value="5">★★★★★</option>
+        </select>
+      </div>
+
+      <div class="form-item" id="scoreWrap">
+        <label>游玩星级评分（五星）</label>
         <select id="starInput">
           <option value="1">★</option>
           <option value="2">★★</option>
@@ -541,6 +562,21 @@
           <option value="4">★★★★</option>
           <option value="5">★★★★★</option>
         </select>
+      </div>
+
+      <div class="form-item" id="dateWrap">
+        <label>出行日期</label>
+        <input type="date" id="dateInput">
+      </div>
+
+      <div class="form-item" id="costWrap">
+        <label>花费（元）</label>
+        <input type="number" id="costInput" placeholder="例如：500">
+      </div>
+
+      <div class="form-item">
+        <label>攻略链接</label>
+        <input type="text" id="linkInput" placeholder="粘贴外部攻略网址">
       </div>
 
       <div class="form-item">
@@ -555,14 +591,6 @@
         <input type="text" id="locInput" placeholder="输入详细地址，如：成都市都江堰青城山">
       </div>
 
-      <div class="form-item">
-        <label>出行日期</label>
-        <input type="date" id="dateInput">
-      </div>
-      <div class="form-item">
-        <label>花费（元）</label>
-        <input type="number" id="costInput" placeholder="例如：500">
-      </div>
       <div class="form-item">
         <label>备注简介</label>
         <textarea id="descInput" rows="3" placeholder="写下攻略、感受、注意事项"></textarea>
@@ -584,7 +612,7 @@
 
   <input type="file" id="fileInput" accept=".json" style="display:none">
 
-  <footer>我的旅行露营收藏系统 · 带高德地图定位版</footer>
+  <footer>我的旅行露营收藏系统 · 带高德地图+攻略链接+想去指数版</footer>
 
   <script>
     let placeList = JSON.parse(localStorage.getItem('placeList')) || [];
@@ -609,10 +637,28 @@
     const imgFileInput = document.getElementById('imgFileInput');
     const mapMask = document.getElementById('mapMask');
     const mapClose = document.getElementById('mapClose');
+    const statusInput = document.getElementById('statusInput');
+    const scoreWrap = document.getElementById('scoreWrap');
+    const dateWrap = document.getElementById('dateWrap');
+    const costWrap = document.getElementById('costWrap');
 
     function saveLocal(){
       localStorage.setItem('placeList',JSON.stringify(placeList));
     }
+
+    // 状态切换显隐
+    function toggleFormByStatus(){
+      if(statusInput.value === '想去'){
+        scoreWrap.style.display = 'none';
+        dateWrap.style.display = 'none';
+        costWrap.style.display = 'none';
+      }else{
+        scoreWrap.style.display = 'block';
+        dateWrap.style.display = 'block';
+        costWrap.style.display = 'block';
+      }
+    }
+    statusInput.onchange = toggleFormByStatus;
 
     // 初始化地图
     function initMap(address){
@@ -652,10 +698,22 @@
     function render(list = placeList){
       listWrap.innerHTML = '';
       list.forEach(item=>{
-        const starStr = '★'.repeat(item.star||3);
+        const starStr = '★'.repeat(item.star||3) + '☆'.repeat(5-(item.star||3));
+        const wantStarStr = '★'.repeat(item.wantStar||3) + '☆'.repeat(5-(item.wantStar||3));
         const costText = item.cost ? `花费：${item.cost}元` : '';
         const dateText = item.date ? `日期：${item.date}` : '';
         const locText = item.loc || '';
+        const linkText = item.link || '';
+
+        // 未出行隐藏星级、日期、花费
+        let extraHtml = '';
+        if(item.status === '已去'){
+          extraHtml += `
+            <div class="card-status">游玩评分：<span class="star">${starStr}</span></div>
+            ${dateText ? `<div class="card-status">${dateText}</div>` : ''}
+            ${costText ? `<div class="card-status">${costText}</div>` : ''}
+          `;
+        }
 
         const card = `
           <div class="card" data-id="${item.id}">
@@ -665,10 +723,12 @@
               <span class="card-tag">${item.type||''}</span>
               <span class="card-tag">${item.area||''}</span>
               <h3>${item.name}</h3>
-              <div class="card-status">${item.status||'想去'} · <span class="star">${starStr}</span></div>
+              <div class="card-status">状态：${item.status||'想去'}</div>
+              <div class="card-status">想去指数：<span class="star">${wantStarStr}</span></div>
+              ${extraHtml}
               <div class="card-status">出行方式：${item.way||'自驾'}</div>
-              <div class="card-status">${dateText} ${costText}</div>
-              <div class="card-desc">${item.desc||''}</div>
+              ${linkText ? `<div class="card-link"><a href="${linkText}" target="_blank">攻略链接→点击打开</a></div>` : ''}
+              <div class="card-desc">${item.desc||'暂无简介'}</div>
               <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${locText||'未填写地址'}</div>
               ${locText ? `<button class="btn-map" onclick="openSiteMap('${locText}')"><i class="fas fa-map"></i> 查看地图定位</button>` : ''}
               <div class="card-ops">
@@ -713,14 +773,17 @@
       document.getElementById('areaInput').value = '成都周边';
       document.getElementById('statusInput').value = '想去';
       document.getElementById('wayInput').value = '自驾';
+      document.getElementById('wantStarInput').value = '3';
       document.getElementById('starInput').value = '3';
       document.getElementById('imgInput').value = '';
       document.getElementById('locInput').value = '';
       document.getElementById('dateInput').value = '';
       document.getElementById('costInput').value = '';
+      document.getElementById('linkInput').value = '';
       document.getElementById('descInput').value = '';
       base64Img = '';
       imgFileInput.value = '';
+      toggleFormByStatus();
     }
 
     imgFileInput.onchange = function(e){
@@ -748,11 +811,13 @@
       const area = document.getElementById('areaInput').value;
       const status = document.getElementById('statusInput').value;
       const way = document.getElementById('wayInput').value;
+      const wantStar = parseInt(document.getElementById('wantStarInput').value);
       const star = parseInt(document.getElementById('starInput').value);
       const img = base64Img || document.getElementById('imgInput').value.trim() || 'https://picsum.photos/seed/random/600/400';
       const loc = document.getElementById('locInput').value.trim();
       const date = document.getElementById('dateInput').value;
       const cost = document.getElementById('costInput').value.trim();
+      const link = document.getElementById('linkInput').value.trim();
       const desc = document.getElementById('descInput').value.trim();
 
       if(!name){
@@ -762,10 +827,10 @@
 
       if(editId){
         const idx = placeList.findIndex(x=>x.id===editId);
-        placeList[idx] = {...placeList[idx],name,dest,type,area,status,way,star,img,loc,date,cost,desc};
+        placeList[idx] = {...placeList[idx],name,dest,type,area,status,way,wantStar,star,img,loc,date,cost,link,desc};
       }else{
         const newId = Date.now();
-        placeList.push({id:newId,name,dest,type,area,status,way,star,img,loc,date,cost,desc});
+        placeList.push({id:newId,name,dest,type,area,status,way,wantStar,star,img,loc,date,cost,link,desc});
       }
       saveLocal();
       render();
@@ -777,19 +842,22 @@
       if(!item)return;
       editId = id;
       modalTitle.innerText = '编辑收藏地点';
-      document.getElementById('nameInput').value = item.name;
+      document.getElementById('nameInput').value = item.name||'';
       document.getElementById('destInput').value = item.dest||'长途旅游';
       document.getElementById('typeInput').value = item.type||'地文景观';
       document.getElementById('areaInput').value = item.area||'成都周边';
       document.getElementById('statusInput').value = item.status||'想去';
       document.getElementById('wayInput').value = item.way||'自驾';
+      document.getElementById('wantStarInput').value = item.wantStar||3;
       document.getElementById('starInput').value = item.star||3;
-      document.getElementById('imgInput').value = item.img.startsWith('data:') ? '' : item.img;
+      document.getElementById('imgInput').value = item.img||'';
       document.getElementById('locInput').value = item.loc||'';
       document.getElementById('dateInput').value = item.date||'';
       document.getElementById('costInput').value = item.cost||'';
+      document.getElementById('linkInput').value = item.link||'';
       document.getElementById('descInput').value = item.desc||'';
       base64Img = '';
+      toggleFormByStatus();
       openModal();
     };
 
@@ -831,6 +899,7 @@
         x.name.toLowerCase().includes(kw) ||
         (x.desc||'').toLowerCase().includes(kw) ||
         (x.loc||'').toLowerCase().includes(kw) ||
+        (x.link||'').toLowerCase().includes(kw) ||
         (x.dest||'').includes(kw) ||
         (x.type||'').includes(kw) ||
         (x.area||'').includes(kw) ||
@@ -852,7 +921,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '旅行露营收藏带地图数据.json';
+      a.download = '旅行收藏_完整备份.json';
       a.click();
       URL.revokeObjectURL(url);
     };
@@ -874,7 +943,7 @@
             alert('文件格式不正确');
           }
         }catch(err){
-          alert('解析失败，请选择正确的JSON文件');
+          alert('解析失败，请选择正确的备份文件');
         }
       };
       reader.readAsText(file);
