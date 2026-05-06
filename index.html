@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的旅行&露营收藏管理系统</title>
-  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=c1160431fd17d5803b246e42aa68064d"></script>
+  <!-- 🔥 这里换成了你的 Web端(JS API) Key → 负责显示地图 -->
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=1f052d38a8c20f59b669c054588fee44"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -619,6 +620,9 @@
     let map = null;
     let currentLoc = "";
 
+    // 🔥 你的 Web服务Key（专门用来解析地址）
+    const WEB_SERVICE_KEY = "c1160431fd17d5803b246e42aa68064d";
+
     const listWrap = document.getElementById('listWrap');
     const modalMask = document.getElementById('modalMask');
     const modalTitle = document.getElementById('modalTitle');
@@ -671,7 +675,10 @@
 
       if(fullAddress){
         AMap.plugin('AMap.Geocoder', function(){
-          const geocoder = new AMap.Geocoder({ city: '全国' });
+          const geocoder = new AMap.Geocoder({ 
+            city: '全国',
+            key: WEB_SERVICE_KEY // 🔥 这里用 Web服务Key 解析
+          });
           geocoder.getLocation(fullAddress, function(status, result){
             if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
               const lnglat = result.geocodes[0].location;
@@ -697,13 +704,11 @@
       if(e.target === mapMask) mapMask.style.display = 'none';
     };
 
-    // 排序规则：想去优先 → 想去指数降序 → 已去在后
+    // 排序：想去优先 → 想去指数降序
     function sortAll(list){
       return [...list].sort((a,b)=>{
-        // 想去排在已去前面
         if(a.status === '想去' && b.status === '已去') return -1;
         if(a.status === '已去' && b.status === '想去') return 1;
-        // 同状态：想去指数从高到低
         return b.wantStar - a.wantStar;
       });
     }
@@ -758,14 +763,10 @@
       initMap(addr, area);
     };
 
-    // 子标签显示逻辑：全部时隐藏所有子标签；其他分类显示对应子标签
+    // ✅ 全部：隐藏所有子标签
     function switchSubTab(mainVal){
       subTabs.forEach(tab=>{
-        if(mainVal === 'all'){
-          tab.classList.remove('show'); // 全部时：所有子标签隐藏
-        }else{
-          tab.classList.toggle('show', tab.dataset.main === mainVal);
-        }
+        tab.classList.toggle('show', mainVal !== 'all' && tab.dataset.main === mainVal);
       });
     }
 
@@ -888,7 +889,6 @@
         switchSubTab(mainVal);
 
         if(mainVal === 'all'){
-          // 全部：排序后直接渲染所有
           render(sortAll(placeList));
         }
       };
@@ -922,13 +922,8 @@
         (x.area||'').includes(kw) ||
         (x.way||'').includes(kw)
       );
-      // 搜索时也保持全部的排序逻辑
       const mainActive = document.querySelector('.main-tab.active').dataset.main;
-      if(mainActive === 'all'){
-        render(sortAll(filterList));
-      }else{
-        render(filterList);
-      }
+      render(mainActive === 'all' ? sortAll(filterList) : filterList);
     };
 
     themeToggle.onclick = ()=>{
@@ -972,7 +967,6 @@
       reader.readAsText(file);
     };
 
-    // 默认进入：全部 → 排序渲染
     switchSubTab('all');
     render(sortAll(placeList));
   </script>
