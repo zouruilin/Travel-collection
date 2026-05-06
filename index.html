@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的旅行&露营收藏管理系统</title>
-  <!-- 已替换成你自己的高德Key -->
-  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=1f052d38a8c20f59b669c054588fee44"></script>
+  <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=c1160431fd17d5803b246e42aa68064d"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -322,7 +321,6 @@
       font-size: 0.8rem;
       color: var(--subtext);
     }
-    /* 地图弹窗 */
     .map-mask {
       position: fixed;
       top: 0;
@@ -393,10 +391,11 @@
     </div>
 
     <div class="sub-filter" id="subFilter">
-      <div class="sub-tab show" data-main="dest" data-sub="长途旅游">长途旅游</div>
-      <div class="sub-tab show" data-main="dest" data-sub="露营">露营</div>
-      <div class="sub-tab show" data-main="dest" data-sub="特种兵旅游">特种兵旅游</div>
-      <div class="sub-tab show" data-main="dest" data-sub="周边一日游">周边一日游</div>
+      <div class="sub-tab" data-main="dest" data-sub="长途旅游">长途旅游</div>
+      <div class="sub-tab" data-main="dest" data-sub="露营">露营</div>
+      <div class="sub-tab" data-main="dest" data-sub="特种兵旅游">特种兵旅游</div>
+      <div class="sub-tab" data-main="dest" data-sub="周边一日游">周边一日游</div>
+      <div class="sub-tab" data-main="dest" data-sub="周末2-3日游">周末2-3日游</div>
 
       <div class="sub-tab" data-main="type" data-sub="地文景观">地文景观</div>
       <div class="sub-tab" data-main="type" data-sub="水域风光">水域风光</div>
@@ -453,7 +452,6 @@
     <div class="grid" id="listWrap"></div>
   </div>
 
-  <!-- 新增/编辑弹窗 -->
   <div class="modal-mask" id="modalMask">
     <div class="modal">
       <h3 id="modalTitle">新增收藏地点</h3>
@@ -469,6 +467,7 @@
           <option value="露营">露营</option>
           <option value="特种兵旅游">特种兵旅游</option>
           <option value="周边一日游">周边一日游</option>
+          <option value="周末2-3日游">周末2-3日游</option>
         </select>
       </div>
 
@@ -602,7 +601,6 @@
     </div>
   </div>
 
-  <!-- 地图弹窗 -->
   <div class="map-mask" id="mapMask">
     <div class="map-box">
       <button class="map-close" id="mapClose">×</button>
@@ -646,7 +644,6 @@
       localStorage.setItem('placeList',JSON.stringify(placeList));
     }
 
-    // 状态切换显隐
     function toggleFormByStatus(){
       if(statusInput.value === '想去'){
         scoreWrap.style.display = 'none';
@@ -660,40 +657,56 @@
     }
     statusInput.onchange = toggleFormByStatus;
 
-    // 初始化地图
-    function initMap(address){
+    function initMap(address, areaName = ''){
       currentLoc = address || '';
+      const fullAddress = areaName && address ? areaName + ' ' + address : address;
+
       if(!map){
         map = new AMap.Map('mapContainer', {
           zoom: 12,
-          center: [104.0668,30.5729] // 默认成都
+          center: [104.0668,30.5729]
         });
       }
       map.clearMap();
-      if(address){
+
+      if(fullAddress){
         AMap.plugin('AMap.Geocoder', function(){
-          let geocoder = new AMap.Geocoder();
-          geocoder.getLocation(address, function(status, result){
-            if(status === 'complete' && result.geocodes.length > 0){
-              let lnglat = result.geocodes[0].location;
+          const geocoder = new AMap.Geocoder({ city: '全国' });
+          geocoder.getLocation(fullAddress, function(status, result){
+            if (status === 'complete' && result.geocodes && result.geocodes.length > 0) {
+              const lnglat = result.geocodes[0].location;
               map.setCenter(lnglat);
               map.setZoom(14);
-              let marker = new AMap.Marker({position: lnglat});
+              const marker = new AMap.Marker({ position: lnglat });
               map.add(marker);
+            } else {
+              alert('⚠️ 地址解析失败，请填写更完整的地址（如：四川 青城山）');
+              map.setCenter([104.0668,30.5729]);
+              map.setZoom(10);
             }
-          })
-        })
+          });
+        });
       }
       mapMask.style.display = 'flex';
     }
 
-    // 关闭地图
     mapClose.onclick = ()=>{
       mapMask.style.display = 'none';
     };
     mapMask.onclick = (e)=>{
       if(e.target === mapMask) mapMask.style.display = 'none';
     };
+
+    // 排序规则：想去优先 → 想去指数降序 → 已去在后
+    function sortAll(list){
+      return [...list].sort((a,b)=>{
+        // 想去排在已去前面
+        if(a.status === '想去' && b.status === '已去') return -1;
+        if(a.status === '已去' && b.status === '想去') return 1;
+        // 同状态：想去指数从高到低
+        return b.wantStar - a.wantStar;
+      });
+    }
 
     function render(list = placeList){
       listWrap.innerHTML = '';
@@ -705,7 +718,6 @@
         const locText = item.loc || '';
         const linkText = item.link || '';
 
-        // 未出行隐藏星级、日期、花费
         let extraHtml = '';
         if(item.status === '已去'){
           extraHtml += `
@@ -730,7 +742,7 @@
               ${linkText ? `<div class="card-link"><a href="${linkText}" target="_blank">攻略链接→点击打开</a></div>` : ''}
               <div class="card-desc">${item.desc||'暂无简介'}</div>
               <div class="card-status"><i class="fas fa-map-marker-alt"></i> ${locText||'未填写地址'}</div>
-              ${locText ? `<button class="btn-map" onclick="openSiteMap('${locText}')"><i class="fas fa-map"></i> 查看地图定位</button>` : ''}
+              ${locText ? `<button class="btn-map" onclick="openSiteMap('${locText}','${item.area||''}')"><i class="fas fa-map"></i> 查看地图定位</button>` : ''}
               <div class="card-ops">
                 <button class="edit-btn" onclick="editItem(${item.id})"><i class="fas fa-edit"></i> 编辑</button>
                 <button class="del-btn" onclick="delItem(${item.id})"><i class="fas fa-trash"></i> 删除</button>
@@ -742,15 +754,15 @@
       });
     }
 
-    // 全局打开地图
-    window.openSiteMap = function(addr){
-      initMap(addr);
+    window.openSiteMap = function(addr, area){
+      initMap(addr, area);
     };
 
+    // 子标签显示逻辑：全部时隐藏所有子标签；其他分类显示对应子标签
     function switchSubTab(mainVal){
       subTabs.forEach(tab=>{
         if(mainVal === 'all'){
-          tab.classList.add('show');
+          tab.classList.remove('show'); // 全部时：所有子标签隐藏
         }else{
           tab.classList.toggle('show', tab.dataset.main === mainVal);
         }
@@ -874,6 +886,11 @@
         tab.classList.add('active');
         const mainVal = tab.dataset.main;
         switchSubTab(mainVal);
+
+        if(mainVal === 'all'){
+          // 全部：排序后直接渲染所有
+          render(sortAll(placeList));
+        }
       };
     });
 
@@ -905,7 +922,13 @@
         (x.area||'').includes(kw) ||
         (x.way||'').includes(kw)
       );
-      render(filterList);
+      // 搜索时也保持全部的排序逻辑
+      const mainActive = document.querySelector('.main-tab.active').dataset.main;
+      if(mainActive === 'all'){
+        render(sortAll(filterList));
+      }else{
+        render(filterList);
+      }
     };
 
     themeToggle.onclick = ()=>{
@@ -949,8 +972,9 @@
       reader.readAsText(file);
     };
 
+    // 默认进入：全部 → 排序渲染
     switchSubTab('all');
-    render();
+    render(sortAll(placeList));
   </script>
 </body>
 </html>
